@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>W8Pool - System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: #0a0a0a;
+      color: #00ff41;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .scanline {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 6px;
+      background: linear-gradient(180deg, transparent, rgba(0, 255, 65, 0.15), transparent);
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+      z-index: 100;
+    }
+    @keyframes scan {
+      0% { transform: translateY(-100%); opacity: 0.6; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0.6; }
+    }
+    .noise {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0.03;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 99;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .header { margin-bottom: 50px; }
+    .typing-line {
+      min-height: 1.5em;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .typing-line .char {
+      display: inline-block;
+      opacity: 0;
+      animation: charIn 0.12s ease-out forwards;
+    }
+    .cursor {
+      display: inline-block;
+      width: 2px; height: 1.2em;
+      background: #00ff41;
+      margin-left: 2px;
+      animation: blink 0.7s step-end infinite, cursorGlow 1.5s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes charIn {
+      0% { opacity: 0; transform: translateY(-6px) scale(0.95); }
+      60% { opacity: 1; transform: translateY(1px) scale(1.02); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes cursorGlow {
+      0%, 100% { box-shadow: 0 0 4px #00ff41; }
+      50% { box-shadow: 0 0 12px #00ff41; }
+    }
+    .reason-section {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #00ff41;
+      padding: 25px;
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.08);
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reason-section .reason-title {
+      font-size: 14px;
+      color: #00ff41;
+      margin-bottom: 20px;
+      letter-spacing: 3px;
+    }
+    .reason-section .reason-text {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #00dd38;
+    }
+    .reason-section .reason-text p { margin-bottom: 14px; }
+    .reason-section .reason-text p:last-child { margin-bottom: 0; }
+    .pool-section {
+      margin-top: 40px;
+      border: 1px solid #00ff41;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+      animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+    .pool-title {
+      font-size: 14px;
+      color: #00ff41;
+      margin-bottom: 25px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .pool-options { display: flex; flex-direction: column; gap: 15px; }
+    .pool-option {
+      display: flex;
+      align-items: center;
+      padding: 18px 20px;
+      border: 1px solid #003300;
+      background: rgba(0, 255, 65, 0.03);
+      cursor: pointer;
+      transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      animation: optionIn 0.4s ease-out both;
+    }
+    .pool-option:nth-child(1) { animation-delay: 0.6s; }
+    .pool-option:nth-child(2) { animation-delay: 0.7s; }
+    .pool-option:nth-child(3) { animation-delay: 0.8s; }
+    .pool-option:nth-child(4) { animation-delay: 0.9s; }
+    .pool-option:nth-child(5) { animation-delay: 1s; }
+    @keyframes optionIn {
+      from { opacity: 0; transform: translateX(-15px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .pool-option:hover {
+      border-color: #00ff41;
+      background: rgba(0, 255, 65, 0.08);
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.25);
+      transform: translateX(4px);
+    }
+    .pool-option.selected {
+      border-color: #00ff41;
+      background: rgba(0, 255, 65, 0.12);
+      box-shadow: inset 0 0 25px rgba(0, 255, 65, 0.08), 0 0 18px rgba(0, 255, 65, 0.2);
+      transform: translateX(4px);
+    }
+    .pool-option .radio {
+      width: 18px; height: 18px;
+      border: 2px solid #00ff41;
+      margin-right: 18px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .pool-option.selected .radio::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 8px; height: 8px;
+      background: #00ff41;
+      box-shadow: 0 0 10px #00ff41;
+      animation: radioPop 0.25s ease-out forwards;
+    }
+    @keyframes radioPop {
+      to { transform: translate(-50%, -50%) scale(1); }
+    }
+    .pool-option .label { font-size: 18px; flex: 1; }
+    .pool-option .count { font-size: 14px; color: #00aa2a; }
+    .bar-container {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: rgba(0, 255, 65, 0.1);
+    }
+    .bar-container .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00aa2a, #00ff41);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
+    }
+    .pool-option.locked {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .pool-option.locked:hover {
+      border-color: #003300;
+      background: rgba(0, 255, 65, 0.03);
+      box-shadow: none;
+    }
+    .already-voted {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #00aa2a;
+    }
+    .current-vote {
+      margin-top: 18px;
+      padding: 12px 16px;
+      border: 1px solid #003300;
+      background: rgba(0, 255, 65, 0.05);
+      font-size: 13px;
+      color: #00aa2a;
+    }
+    .current-vote .total {
+      color: #00ff41;
+      font-size: 14px;
+    }
+    .submit-btn {
+      margin-top: 25px;
+      padding: 14px 35px;
+      background: transparent;
+      border: 1px solid #00ff41;
+      color: #00ff41;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .submit-btn:hover {
+      background: rgba(0, 255, 65, 0.15);
+      box-shadow: 0 0 25px rgba(0, 255, 65, 0.35);
+    }
+    .submit-btn:not(:disabled):active {
+      transform: scale(0.98);
+    }
+    .submit-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .result-msg {
+      margin-top: 20px;
+      font-size: 14px;
+      animation: glitch 0.3s;
+    }
+    @keyframes glitch {
+      0% { opacity: 0; transform: translateX(-2px); }
+      50% { opacity: 1; transform: translateX(2px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 20px 14px; }
+      .header { margin-bottom: 30px; }
+      .typing-line { font-size: 14px; }
+      .reason-section { padding: 18px 16px; margin-top: 20px; margin-bottom: 20px; }
+      .reason-section .reason-title { font-size: 12px; letter-spacing: 2px; margin-bottom: 14px; }
+      .reason-section .reason-text { font-size: 14px; line-height: 1.8; }
+      .reason-section .reason-text p { margin-bottom: 12px; }
+      .pool-section { padding: 20px 16px; margin-top: 25px; }
+      .pool-title { font-size: 12px; margin-bottom: 18px; }
+      .pool-option { padding: 14px 16px; flex-wrap: wrap; }
+      .pool-option .radio { margin-right: 14px; }
+      .pool-option .label { font-size: 16px; order: 2; width: calc(100% - 36px); margin-left: 32px; margin-top: 4px; }
+      .pool-option .count { font-size: 13px; order: 1; margin-left: auto; }
+      .submit-btn { padding: 12px 28px; font-size: 13px; width: 100%; }
+    }
+    @media (max-width: 380px) {
+      .container { padding: 16px 12px; }
+      .reason-section .reason-text { font-size: 13px; }
+      .pool-option .label { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="noise"></div>
+  <div class="container">
+    <div class="header">
+      <div class="typing-line" id="line1"></div>
+      <div class="typing-line" id="line2"></div>
+      <div class="typing-line" id="line3"><span class="cursor" id="cursor"></span></div>
+    </div>
+    <div class="reason-section">
+      <div class="reason-title">[ পোল এর কারণ ]</div>
+      <div class="reason-text">
+        <p>আমি আর ভিডিও আপলোড করবো না… কারণ আমার কোনো লাভই হয় না, শুধু আমার নিজের পকেটের টাকাই যায়।</p>
+        <p>যতদিন আমার কাছে টাকা ছিল, ততদিন আমি ভিডিও, টুলস সব আপলোড করছি। সবকিছু ফ্রি দিয়েছি, কোনোদিন কারও কাছে টাকা চাইনি।</p>
+        <p>কিন্তু আজ দেখি — মানুষ আমার টুলস বিক্রি করে অনেক টাকা ইনকাম করছে… আর আমি? আমার নিজের অবস্থাই ভালো না।</p>
+        <p>৬ মাস ধরে আমি কোনো কাজ করি না। আমার পরিবার আছে, দায়িত্ব আছে… কিন্তু এই কাজ করে আমি কোনো সাপোর্ট পাইনি।</p>
+        <p>সবাই ফ্রি জিনিস চায়… কিন্তু যে মানুষটা পেছন থেকে এত কিছু করে দেয়, তার কষ্টটা কেউ দেখে না।</p>
+        <p>এভাবে আর কতদিন চলা যায় বলেন? আমারও তো একটা জীবন আছে… আমারও তো পরিবার আছে…</p>
+      </div>
+    </div>
+    <div class="pool-section">
+      <div class="pool-title">[ Pool — Select One ]</div>
+      <div class="pool-options">
+        <div class="pool-option" data-id="1"><span class="radio"></span><span class="label">কোর্স লঞ্চ করবো</span><span class="count" data-count="1">504</span><div class="bar-container"><div class="fill" data-fill="1" style="width:87%"></div></div></div><div class="pool-option" data-id="2"><span class="radio"></span><span class="label">কোর্স লঞ্চ করবো না</span><span class="count" data-count="2">76</span><div class="bar-container"><div class="fill" data-fill="2" style="width:13%"></div></div></div>      </div>
+      <div class="current-vote" id="currentVote">
+        <span class="total">Current vote:</span>
+        <span id="voteSummary">কোর্স লঞ্চ করবো: 504 — কোর্স লঞ্চ করবো না: 76 (Total: 580)</span>
+      </div>
+      <button class="submit-btn" id="submitBtn" disabled>Submit Vote</button>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="already-voted" id="alreadyVoted" style="display: none;"></div>
+    </div>
+  </div>
+  <script>
+    const lines = [
+      '> W8Pool SYSTEM v1.0',
+      '> Initializing poll protocol...',
+      '> Ready. Awaiting input.'
+    ];
+    const lineIds = ['line1', 'line2', 'line3'];
+    let lineIndex = 0;
+    let charIndex = 0;
+    const votedKey = 'w8pool_voted';
+    const apiUrl = 'index.php';
+    const optionIds = ["1","2"];
+    const optionLabels = {"1":"\u0995\u09cb\u09b0\u09cd\u09b8 \u09b2\u099e\u09cd\u099a \u0995\u09b0\u09ac\u09cb","2":"\u0995\u09cb\u09b0\u09cd\u09b8 \u09b2\u099e\u09cd\u099a \u0995\u09b0\u09ac\u09cb \u09a8\u09be"};
+    let stored = {"1":504,"2":76};
+
+    function hasVoted() {
+      return localStorage.getItem(votedKey) === '1';
+    }
+
+    function lockPool() {
+      options.forEach(o => o.classList.add('locked'));
+      submitBtn.style.display = 'none';
+      resultMsg.textContent = '';
+      const el = document.getElementById('alreadyVoted');
+      el.style.display = 'block';
+      el.textContent = '> You have already voted. One vote per device.';
+    }
+
+    function applyVotes(data) {
+      if (data && data.votes) {
+        stored = {};
+        for (var k in data.votes) if (data.votes.hasOwnProperty(k)) stored[k] = (data.votes[k] || 0) | 0;
+        optionIds.forEach(function(id) { if (stored[id] === undefined) stored[id] = 0; });
+      }
+      updateBars();
+    }
+
+    function loadVotes() {
+      fetch(apiUrl + '?action=get')
+        .then(r => r.json())
+        .then(applyVotes)
+        .catch(function() { updateBars(); });
+    }
+
+    function typeNext() {
+      if (lineIndex >= lines.length) {
+        document.getElementById('cursor').style.display = 'none';
+        return;
+      }
+      const lineEl = document.getElementById(lineIds[lineIndex]);
+      const text = lines[lineIndex];
+      if (charIndex < text.length) {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = text[charIndex];
+        span.style.animationDelay = (charIndex * 0.05) + 's';
+        lineEl.appendChild(span);
+        charIndex++;
+        setTimeout(typeNext, 80);
+      } else {
+        lineIndex++;
+        charIndex = 0;
+        setTimeout(typeNext, 400);
+      }
+    }
+
+    function updateVoteSummary() {
+      const t = optionIds.reduce(function(sum, id) { return sum + (stored[id] || 0); }, 0);
+      const parts = optionIds.map(function(id) { return optionLabels[id] + ': ' + (stored[id] || 0); });
+      const s = document.getElementById('voteSummary');
+      if (s) s.textContent = parts.join(' — ') + ' (Total: ' + t + ')';
+    }
+
+    function updateBars() {
+      const total = optionIds.reduce(function(sum, id) { return sum + (stored[id] || 0); }, 0) || 1;
+      optionIds.forEach(function(id) {
+        const countEl = document.querySelector('[data-count="' + id + '"]');
+        const fillEl = document.querySelector('[data-fill="' + id + '"]');
+        if (countEl) countEl.textContent = stored[id] || 0;
+        if (fillEl) fillEl.style.width = (total ? ((stored[id] || 0) / total * 100) : 0) + '%';
+      });
+      updateVoteSummary();
+    }
+
+    let selected = null;
+    const options = document.querySelectorAll('.pool-option');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultMsg = document.getElementById('resultMsg');
+
+    options.forEach(opt => {
+      opt.addEventListener('click', function() {
+        options.forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        selected = opt.dataset.id;
+        submitBtn.disabled = false;
+      });
+    });
+
+    submitBtn.addEventListener('click', function() {
+      if (!selected) return;
+      if (hasVoted()) return;
+      const form = new FormData();
+      form.append('action', 'vote');
+      form.append('option', selected);
+      fetch(apiUrl, { method: 'POST', body: form })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.already) {
+            localStorage.setItem(votedKey, '1');
+            applyVotes(data);
+            resultMsg.textContent = '> You have already voted (this IP).';
+            lockPool();
+          } else if (data.ok && data.votes) {
+            localStorage.setItem(votedKey, '1');
+            applyVotes(data);
+            resultMsg.textContent = '> Vote recorded. Thank you.';
+            lockPool();
+          } else {
+            applyVotes(data);
+            resultMsg.textContent = '> Vote recorded. Thank you.';
+            lockPool();
+          }
+          selected = null;
+        })
+        .catch(function() {
+          stored[selected] = (stored[selected] || 0) + 1;
+          localStorage.setItem('w8pool', JSON.stringify(stored));
+          optionIds.forEach(function(id) { if (stored[id] === undefined) stored[id] = 0; });
+          localStorage.setItem(votedKey, '1');
+          updateBars();
+          resultMsg.textContent = '> Vote recorded (offline). Thank you.';
+          lockPool();
+          selected = null;
+        });
+    });
+
+    function applyLockState() {
+      if (hasVoted()) lockPool();
+    }
+
+    loadVotes();
+    fetch(apiUrl + '?action=check')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d && d.voted === false) localStorage.removeItem(votedKey);
+        applyLockState();
+      })
+      .catch(function() { applyLockState(); });
+    setTimeout(typeNext, 600);
+  </script>
+</body>
+  </html>
+  
